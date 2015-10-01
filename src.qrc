@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file alias="gg">GoBang.png</file>
+        <file>icon.jpg</file>
     </qresource>
 </RCC>

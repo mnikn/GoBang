@@ -28,4 +28,4 @@ FORMS    +=
 OTHER_FILES +=
 
 RESOURCES += \
-    ttttt.qrc
+    src.qrc

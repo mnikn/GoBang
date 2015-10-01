@@ -54,11 +54,14 @@ private:
     QAction *blackAction;
     QAction *firstAction;
     QAction *lastAction;
+    QAction *aboutmeAction;
+    QAction *helpAction;
     QMenu *modeMenu;
     QMenu *optionMenu;
     QMenu *difficultMenu;
     QMenu *colorMenu;
     QMenu *priorityMenu;
+    QMenu *helpMenu;
     QPushButton *withdrawButton;
     QPushButton *quitButton;
     QPushButton *renewButton;
@@ -66,6 +69,9 @@ private:
     void initMenus();
     void initButtons();
     void initWindow();
+    void computerMode();
+
+private slots:
     void renew();
     void withdraw();
     void selectFirstHand();
@@ -78,7 +84,8 @@ private:
     void selectEasyMode();
     void selectNormalMode();
     void selectDifficultMode();
-    void computerMode();
+    void selectHelp();
+    void selectAboutMe();
 };
 
 #endif // MAINWINDOW_H

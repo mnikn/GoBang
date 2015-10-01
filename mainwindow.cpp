@@ -17,6 +17,8 @@ void MainWindow::initActions()
     blackAction = new QAction(tr("黑色"),this);
     firstAction = new QAction(tr("先手"),this);
     lastAction = new QAction(tr("后手"),this);
+    aboutmeAction = new QAction(tr("有关作者"),this);
+    helpAction = new QAction(tr("帮助"),this);
 }
 
 /**
@@ -27,6 +29,7 @@ void MainWindow::initMenus()
 {
     modeMenu = menuBar()->addMenu(tr("游戏模式"));
     optionMenu = menuBar()->addMenu(tr("游戏设置"));
+    helpMenu = menuBar()->addMenu(tr("帮助"));
     difficultMenu = optionMenu->addMenu(tr("游戏难度"));
     colorMenu = optionMenu->addMenu(tr("本方棋色"));
     priorityMenu = optionMenu->addMenu(tr("先后手"));
@@ -44,6 +47,9 @@ void MainWindow::initMenus()
 
     priorityMenu->addAction(firstAction);
     priorityMenu->addAction(lastAction);
+
+    helpMenu->addAction(aboutmeAction);
+    helpMenu->addAction(helpAction);
 }
 
 /**
@@ -52,9 +58,9 @@ void MainWindow::initMenus()
  */
 void MainWindow::initButtons()
 {
-    withdrawButton = new QPushButton("悔棋",this);
-    renewButton = new QPushButton("重新开始游戏",this);
-    quitButton = new QPushButton("退出",this);
+    withdrawButton = new QPushButton(tr("悔棋"),this);
+    renewButton = new QPushButton(tr("重新开始游戏"),this);
+    quitButton = new QPushButton(tr("退出"),this);
 
     withdrawButton->setGeometry(625,90,100,50);
     renewButton->setGeometry(625,190,100,50);
@@ -71,9 +77,11 @@ void MainWindow::initWindow()
     message = new QMessageBox(this);
     message->setAutoFillBackground(true);
     message->setWindowTitle(tr("提示"));
+    message->setWindowIcon(QIcon(":/icon.jpg"));
 
     setFixedSize(800,600);
-    setWindowTitle("五子棋");
+    setWindowTitle(tr("五子棋"));
+    setWindowIcon(QIcon(":/icon.jpg"));
     QPixmap pixmap = QPixmap(":/gg").scaled(this->size());
     QPalette palette(this->palette());
     palette.setBrush(QPalette::Background,QBrush(pixmap));
@@ -123,19 +131,21 @@ MainWindow::MainWindow(QWidget *parent) :
     initButtons();
     initWindow();
 
-    connect(quitButton,&QPushButton::clicked,this,&QApplication::quit);
-    connect(renewButton,&QPushButton::clicked,this,&MainWindow::renew);
-    connect(withdrawButton,&QPushButton::clicked,this,&MainWindow::withdraw);
-    connect(firstAction,&QAction::triggered,this,&MainWindow::selectFirstHand);
-    connect(lastAction,&QAction::triggered,this,&MainWindow::selectLastHand);
-    connect(whiteAction,&QAction::triggered,this,&MainWindow::selectWhiteColor);
-    connect(blackAction,&QAction::triggered,this,&MainWindow::selectBlackColor);
-    connect(manAction,&QAction::triggered,this,&MainWindow::selectManMode);
-    connect(computerAction,&QAction::triggered,this,&MainWindow::selectComputerMode);
-    connect(internetAction,&QAction::triggered,this,&MainWindow::selectInternetMode);
-    connect(easyAction,&QAction::triggered,this,&MainWindow::selectEasyMode);
-    connect(normalAction,&QAction::triggered,this,&MainWindow::selectNormalMode);
-    connect(difficultAction,&QAction::triggered,this,&MainWindow::selectDifficultMode);
+    connect(quitButton,SIGNAL(clicked(bool)),this,SLOT(close()));
+    connect(renewButton,SIGNAL(clicked(bool)),this,SLOT(renew()));
+    connect(withdrawButton,SIGNAL(clicked(bool)),this,SLOT(withdraw()));
+    connect(firstAction,SIGNAL(triggered(bool)),this,SLOT(selectFirstHand()));
+    connect(lastAction,SIGNAL(triggered(bool)),this,SLOT(selectLastHand()));
+    connect(whiteAction,SIGNAL(triggered(bool)),this,SLOT(selectWhiteColor()));
+    connect(blackAction,SIGNAL(triggered(bool)),this,SLOT(selectBlackColor()));
+    connect(manAction,SIGNAL(triggered(bool)),this,SLOT(selectManMode()));
+    connect(computerAction,SIGNAL(triggered(bool)),this,SLOT(selectComputerMode()));
+    connect(internetAction,SIGNAL(triggered(bool)),this,SLOT(selectInternetMode()));
+    connect(easyAction,SIGNAL(triggered(bool)),this,SLOT(selectEasyMode()));
+    connect(normalAction,SIGNAL(triggered(bool)),this,SLOT(selectNormalMode()));
+    connect(difficultAction,SIGNAL(triggered(bool)),this,SLOT(selectDifficultMode()));
+    connect(helpAction,SIGNAL(triggered(bool)),this,SLOT(selectHelp()));
+    connect(aboutmeAction,SIGNAL(triggered(bool)),this,SLOT(selectAboutMe()));
 }
 
 /**
@@ -476,6 +486,24 @@ void MainWindow::selectDifficultMode()
 {
     isComputerMode = true;
     message->setText(tr("该功能尚未开放，只需999元，立刻解锁困难模式！"));
+    message->setGeometry(550,350,200,200);
+    message->show();
+}
+
+/**
+ * @brief MainWindow::selectHelp
+ * 选择游戏帮助
+ */
+void MainWindow::selectHelp()
+{
+    message->setText(tr("五子棋，先连成五子者为胜"));
+    message->setGeometry(550,350,200,200);
+    message->show();
+}
+
+void MainWindow::selectAboutMe()
+{
+    message->setText(tr("制作人郑志昭,如有bug,可联系qq:329121948"));
     message->setGeometry(550,350,200,200);
     message->show();
 }
