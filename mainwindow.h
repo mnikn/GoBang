@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QTcpSocket>
 #include <QMainWindow>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPaintEvent>
@@ -41,8 +43,12 @@ public:
     ~MainWindow();
 
 private:
+    QString address;
+    int port;
     class Tool *tool;
     class Ai *ai;
+    class Server *server;
+    QTcpSocket *socket;
     QMessageBox *message;
     QAction *manAction;
     QAction *computerAction;
@@ -86,6 +92,8 @@ private slots:
     void selectDifficultMode();
     void selectHelp();
     void selectAboutMe();
+    void newConnection();
+    void displayError(QAbstractSocket::SocketError);
 };
 
 #endif // MAINWINDOW_H

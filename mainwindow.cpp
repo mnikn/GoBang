@@ -110,6 +110,7 @@ MainWindow::MainWindow(QWidget *parent) :
     tool = new Tool;
     ai = new Ai;
     message = new QMessageBox(this);
+    socket = new QTcpSocket(this);
 
     position.setX(0);
     position.setY(0);
@@ -146,6 +147,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(difficultAction,SIGNAL(triggered(bool)),this,SLOT(selectDifficultMode()));
     connect(helpAction,SIGNAL(triggered(bool)),this,SLOT(selectHelp()));
     connect(aboutmeAction,SIGNAL(triggered(bool)),this,SLOT(selectAboutMe()));
+    connect(socket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(displayError(QAbstractSocket::SocketError)));
 }
 
 /**
@@ -155,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
  */
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    if ((isManMode ==true || isEasy ==true || isNormal == true) &&event->button()==Qt::LeftButton &&event->pos().x()>=20 && event->pos().x()<=515 &&event->pos().y()>=20&&event->pos().y()<=515&&isWin==false){
+    if ((isManMode||isInternetMode|| isEasy||isNormal) &&event->button()==Qt::LeftButton &&event->pos().x()>=20 && event->pos().x()<=515 &&event->pos().y()>=20&&event->pos().y()<=515&&isWin==false){
 
         //捕捉下棋点
         if (chessboard[tool->findPosition(event->pos()).x()][tool->findPosition(event->pos()).y()] ==0){
@@ -206,12 +208,12 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
             }
         }
     }
-    else if((isManMode ==false && isComputerMode==false)){
+    else if((!isManMode&&!isComputerMode&&!isInternetMode)){
         message->setText(tr("请先选择模式！"));
         message->setGeometry(550,350,200,200);
         message->show();
     }
-    else if(isEasy==false&&isNormal==false&&isManMode==false){
+    else if(!isEasy&&!isNormal&&!isManMode){
         message->setText(tr("请先选择难度！"));
         message->setGeometry(550,350,200,200);
         message->show();
@@ -411,7 +413,10 @@ void MainWindow::selectManMode()
     isInternetMode = false;
     isEasy =false;
     isNormal = false;
-    this->renew();
+    withdrawButton->setEnabled(true);
+
+    renew();
+
     message->setText(tr("人人模式开始！"));
     message->setGeometry(550,350,200,200);
     message->show();
@@ -426,12 +431,19 @@ void MainWindow::selectComputerMode()
     isComputerMode = true;
     isManMode = false;
     isInternetMode = false;
+    withdrawButton->setEnabled(true);
+
     renew();
+
     message->setText(tr("人机模式开始！请选择难度！"));
     message->setGeometry(550,350,200,200);
     message->show();
 }
 
+/**
+ * @brief MainWindow::selectInternetMode
+ * 选择网络对战
+ */
 void MainWindow::selectInternetMode()
 {
     isInternetMode = true;
@@ -439,10 +451,14 @@ void MainWindow::selectInternetMode()
     isManMode = false;
     isEasy =false;
     isNormal = false;
+    withdrawButton->setEnabled(false);
+
     renew();
-    message->setText(tr("网络对战模式开始！"));
-    message->setGeometry(550,350,200,200);
-    message->show();
+
+    //得到地址与端口,并发送连接请求
+    address = QInputDialog::getText(this,tr("设置"),tr("地址"));
+    port = QInputDialog::getText(this,tr("设置"),tr("端口")).toInt();
+    newConnection();
 }
 
 
@@ -452,11 +468,15 @@ void MainWindow::selectInternetMode()
  */
 void MainWindow::selectEasyMode()
 {
-    isManMode = false;
-    isNormal = false;
     isComputerMode = true;
     isEasy =true;
-    this->renew();
+    isManMode = false;
+    isNormal = false;
+    isInternetMode = false;
+    withdrawButton->setEnabled(true);
+
+    renew();
+
     message->setText(tr("简单难度已选择！"));
     message->setGeometry(550,350,200,200);
     message->show();
@@ -468,11 +488,15 @@ void MainWindow::selectEasyMode()
  */
 void MainWindow::selectNormalMode()
 {
-    isManMode = false;
-    isEasy = false;
     isComputerMode = true;
     isNormal =true;
-    this->renew();
+    isEasy = false;
+    isManMode = false;
+    isInternetMode = false;
+    withdrawButton->setEnabled(true);
+
+    renew();
+
     message->setText(tr("普通难度已选择！"));
     message->setGeometry(550,350,200,200);
     message->show();
@@ -485,6 +509,14 @@ void MainWindow::selectNormalMode()
 void MainWindow::selectDifficultMode()
 {
     isComputerMode = true;
+    isManMode = false;
+    isInternetMode = false;
+    isNormal =false;
+    isEasy = false;
+    withdrawButton->setEnabled(true);
+
+    renew();
+
     message->setText(tr("该功能尚未开放，只需999元，立刻解锁困难模式！"));
     message->setGeometry(550,350,200,200);
     message->show();
@@ -501,6 +533,10 @@ void MainWindow::selectHelp()
     message->show();
 }
 
+/**
+ * @brief MainWindow::selectAboutMe
+ * 选择有关作者
+ */
 void MainWindow::selectAboutMe()
 {
     message->setText(tr("制作人郑志昭,如有bug,可联系qq:329121948"));
@@ -621,9 +657,11 @@ void MainWindow::renew()
     isWin = false;
     isFirstHand = true;
     termFlag = colorFlag;
-    message->setText(tr("游戏已重新开始！"));
-    message->setGeometry(550,350,200,200);
-    message->show();
+    if(!isInternetMode){
+        message->setText(tr("游戏已重新开始！"));
+        message->setGeometry(550,350,200,200);
+        message->show();
+    }
 }
 
 /**
@@ -648,6 +686,24 @@ void MainWindow::computerMode()
         termFlag = WHITE;
     else
         termFlag = BLACK;
+}
+
+/**
+ * @brief MainWindow::newConnection
+ * 客户端请求连接
+ */
+void MainWindow::newConnection()
+{
+    socket->connectToHost(address,port);
+}
+
+/**
+ * @brief MainWindow::displayError
+ * 显示客服端连接错误
+ */
+void MainWindow::displayError(QAbstractSocket::SocketError)
+{
+    qDebug()<<"Socket Error!";
 }
 
 
@@ -675,5 +731,3 @@ MainWindow::~MainWindow()
     delete tool;
     delete ai;
 }
-
-
